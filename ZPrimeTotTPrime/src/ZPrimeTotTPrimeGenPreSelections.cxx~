@@ -1,0 +1,161 @@
+#include "UHH2/ZPrimeTotTPrime/include/ZPrimeTotTPrimeGenSelections.h"
+#include <stdexcept>
+#include <cmath>
+
+using namespace uhh2;
+using namespace std;
+
+ZPrimeGen::ZPrimeGen(const vector<GenParticle> & genparticles, bool throw_on_failure){
+  //Initiate all countervariables
+  int  n_TPrime=0, n_t =0;
+  
+  //Go over all Particles of the event to find the rigth one
+  for(unsigned int i=0; i<genparticles.size(); i++){
+    const GenParticle & genp = genparticles[i];
+    
+    //Try to find the ZPrime and once I find it collect the decay products
+    if(abs(genp.pdgId()) == 9900113 ){
+      
+      ZPrime = genp;
+      double masse = ZPrime.v4().mass();
+      if(masse==0){
+      daughter1 = *genp.daughter(&genparticles,1); 
+      daughter2 = *genp.daughter(&genparticles,2);
+
+      // Check if the Decay-Product is a TPrime and collect the decay products of it
+      if (abs(daughter1.pdgId()) ==8000001 ){
+      TPrime = daughter1;
+      n_TPrime++;
+
+      //Check the Decay chanel of the TPrime. If it is none of these there is an error message
+      switch(TPrime.daughter(&genparticles,1)->pdgId()){
+      case 5: bottom = *TPrime.daughter(&genparticles,1);break;
+      case 6: top =  *TPrime.daughter(&genparticles,1);break;
+      case 23:Z   =  *TPrime.daughter(&genparticles,1);break; 
+      case 24:W   =  *TPrime.daughter(&genparticles,1);break;
+      case 25:H   =  *TPrime.daughter(&genparticles,1);break;
+      default : if(throw_on_failure){cout << "Zerfal der nicht bedacht wurde" <<endl;}
+      }
+      switch(TPrime.daughter(&genparticles,2)->pdgId()){
+      case 5: bottom = *TPrime.daughter(&genparticles,2);break;
+      case 6: top =  *TPrime.daughter(&genparticles,2);break;
+      case 23:Z   =  *TPrime.daughter(&genparticles,2);break; 
+      case 24:W   =  *TPrime.daughter(&genparticles,2);break;
+      case 25:H   =  *TPrime.daughter(&genparticles,2);break;
+      default : if(throw_on_failure){cout << "Zerfal der nicht bedacht wurde" <<endl;}
+      }
+      }
+
+      if(abs(daughter2.pdgId()) == 8000001){ 
+      TPrime = daughter2;
+      n_TPrime++;
+      switch(TPrime.daughter(&genparticles,1)->pdgId()){
+      case 5: bottom = *TPrime.daughter(&genparticles,1);break;
+      case 6: top =  *TPrime.daughter(&genparticles,1);break;
+      case 23:Z   =  *TPrime.daughter(&genparticles,1);break; 
+      case 24:W   =  *TPrime.daughter(&genparticles,1);break;
+      case 25:H   =  *TPrime.daughter(&genparticles,1);break;
+      default : if(throw_on_failure){cout << "Zerfal der nicht bedacht wurde" <<endl;}
+      }
+      switch(TPrime.daughter(&genparticles,2)->pdgId()){
+      case 5: bottom = *TPrime.daughter(&genparticles,2);break;
+      case 6: top =  *TPrime.daughter(&genparticles,2);break;
+      case 23:Z   =  *TPrime.daughter(&genparticles,2);break; 
+      case 24:W   =  *TPrime.daughter(&genparticles,2);break;
+      case 25:H   =  *TPrime.daughter(&genparticles,2);break;
+      default : if(throw_on_failure){cout << "Zerfal der nicht bedacht wurde" <<endl;}
+      }}
+
+      //Check if the decay product is a top and collect the decay products of it
+      if(abs(daughter1.pdgId())==6){
+	 main_top = daughter1;
+	n_t++;
+	//Check the decay chanel of the top.If it is none of these there is an error message 
+	if(main_top.daughter(&genparticles,1)->pdgId()==24){
+	  top_W = *main_top.daughter(&genparticles,1);
+	  top_b = *main_top.daughter(&genparticles,2);
+	}
+
+	if(main_top.daughter(&genparticles,2)->pdgId()==24){
+	  top_W = *main_top.daughter(&genparticles,2);
+	  top_b = *main_top.daughter(&genparticles,1);
+	}
+      }
+
+      if(abs(daughter2.pdgId())==6){
+	 main_top = daughter1;
+	n_t++;
+	if(main_top.daughter(&genparticles,1)->pdgId()==24){
+	  top_W = *main_top.daughter(&genparticles,1);
+	  top_b = *main_top.daughter(&genparticles,2);
+	}
+
+	if(main_top.daughter(&genparticles,2)->pdgId()==24){
+	  top_W = *main_top.daughter(&genparticles,2);
+	  top_b = *main_top.daughter(&genparticles,1);
+	}
+      }
+    }
+     }
+  }
+      
+  //See if there was a top and a TPrime or if the ZPrime decays in something else
+  if(n_t != 1 || n_TPrime != 1){
+    cout<<"Kein Top und kein TPrime" << endl;
+    }
+}       
+
+
+//Get the particle
+GenParticle ZPrimeGen::Top() const{
+    return main_top;
+}
+GenParticle ZPrimeGen::WBoson() const{
+    return W;
+}
+GenParticle ZPrimeGen::ZBoson() const{
+    return Z;
+}
+GenParticle ZPrimeGen::Higgs() const{
+    return H;
+}
+GenParticle ZPrimeGen::ZP() const{
+    return ZPrime;
+}
+GenParticle ZPrimeGen::TP() const{
+    return TPrime;
+}
+
+//Get the PT of the leading particles
+float ZPrimeGen::Main_Top_PT()const{return main_top.pt();}
+float ZPrimeGen::TPrime_PT()const{return TPrime.pt();}
+float ZPrimeGen::ZPrime_PT()const{return ZPrime.pt();}
+
+
+//Get the mass of the particles
+float ZPrimeGen::ZPrime_Mass()const{return ZPrime.v4().mass();}
+float ZPrimeGen::TPrime_Mass()const{return TPrime.v4().mass();}
+
+//Get delta phi
+float ZPrimeGen::TPrimeTop_Phi()const{return abs(TPrime.phi()- main_top.phi());}
+float ZPrimeGen::HT_Phi()const{return abs(H.phi()- top.phi());}
+float ZPrimeGen::ZT_Phi()const{return abs(Z.phi()- top.phi());}
+float ZPrimeGen::TopWB_Phi()const{return abs(W.phi()- bottom.phi());}
+float ZPrimeGen::TPrimeWB_Phi()const{return abs(top_W.phi()- top_b.phi());}
+
+//Get eta
+float ZPrimeGen::TPrime_Eta()const{return TPrime.eta();}
+float ZPrimeGen::Top_Eta()const{return main_top.eta();}
+float ZPrimeGen::HT_Eta()const{return H.eta();}
+float ZPrimeGen::ZT_Eta()const{return Z.eta();}
+float ZPrimeGen::TPrimeWB_Eta()const{return W.eta();}
+float ZPrimeGen::TopWB_Eta()const{return top_W.eta();}
+
+ZPrimeGenProducer::ZPrimeGenProducer(uhh2::Context & ctx, const std::string & name, bool throw_on_failure_): throw_on_failure(throw_on_failure_){
+    h_zprimegen = ctx.get_handle<ZPrimeGen>(name);
+}
+
+bool ZPrimeGenProducer::process(Event & event){
+    event.set(h_zprimegen, ZPrimeGen(*event.genparticles, throw_on_failure));
+    return true;
+}

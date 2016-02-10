@@ -1,0 +1,22 @@
+#include <UHH2/ZPrimeTotTPrime/include/ZPrimeTotTPrimePreSelections.h>
+
+#include <iostream>
+#include <memory>
+
+#include <UHH2/core/include/LorentzVector.h>
+
+////////////////////////////////////////////////////////
+
+uhh2::NJetCut::NJetCut(int nmin_, int nmax_, float ptmin_, float etamax_):
+  nmin(nmin_), nmax(nmax_), ptmin(ptmin_), etamax(etamax_) {}
+
+bool uhh2::NJetCut::passes(const uhh2::Event& event){
+
+  int njet(0);
+  for(auto & jet : *event.jets){
+    if(jet.pt() > ptmin && fabs(jet.eta()) < etamax) ++njet;
+  }
+
+  return (njet >= nmin) && (njet <= nmax);
+}
+////////////////////////////////////////////////////////
